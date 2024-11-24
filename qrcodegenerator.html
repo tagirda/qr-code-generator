@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Generator – Designer Edition</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+    <style>
+        * {  
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #1a1a1a;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, #ff7eb3, #ff758c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .container {
+            width: 350px;
+            background: #262626;
+            border: 2px solid #444;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+            text-align: center;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        input {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            border: none;
+            border-bottom: 3px solid #555;
+            background: transparent;
+            color: #fff;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            border-bottom-color: #ff758c;
+        }
+
+        input::placeholder {
+            color: #888;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            color: #fff;
+            background: linear-gradient(90deg, #ff7eb3, #ff758c);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(255, 117, 140, 0.4);
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 16px;
+            background: #262626;
+            color: #fff;
+            border: 2px solid #444;
+            border-radius: 10px;
+            display: none; /* Initially hide the select dropdown */
+        }
+
+        #qr-code {
+            margin-top: 20px;
+            animation: fadeIn 1s ease-out forwards;
+        }
+
+        #download-btn {
+            display: none;
+            text-decoration: none;
+            color: #fff;
+            font-weight: bold;
+            margin-top: 10px;
+            padding: 10px 15px;
+            border-radius: 10px;
+            background: linear-gradient(90deg, #ff758c, #ff7eb3);
+        }
+
+        #download-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 5px 20px rgba(255, 117, 140, 0.4);
+        }
+
+        footer {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        footer a {
+            text-decoration: none;
+            color: #ff758c;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>QR Generator</h1>
+        <div class="input-group">
+            <input type="text" id="qr-data" placeholder="Type text or URL here...">
+        </div>
+        <button onclick="generateQRCode()">Create QR Code</button>
+        <select id="file-format">
+            <option value="png">Download as PNG</option>
+            <option value="jpg">Download as JPG</option>
+            <option value="svg">Download as SVG</option>
+        </select>
+        <a id="download-btn">Download QR Code</a>
+        <canvas id="qr-code"></canvas>
+        <footer>
+            Designed with 🔥 by <a href="#">Your Name</a>
+        </footer>
+    </div>
+
+    <script>
+        let currentQRCodeData = "";  // Track QR code data
+
+        async function generateQRCode() {
+            const qrData = document.getElementById("qr-data").value;
+            const qrCodeCanvas = document.getElementById("qr-code");
+            const downloadBtn = document.getElementById("download-btn");
+            const formatSelect = document.getElementById("file-format");
+            const format = formatSelect.value;
+
+            if (qrData.trim() !== "" && qrData !== currentQRCodeData) {
+                currentQRCodeData = qrData;  // Save current data
+
+                // Clear previous QR code
+                qrCodeCanvas.getContext("2d").clearRect(0, 0, qrCodeCanvas.width, qrCodeCanvas.height);
+
+                try {
+                    // Generate QR code
+                    await QRCode.toCanvas(qrCodeCanvas, qrData, {
+                        width: 250,
+                        margin: 1,
+                        color: {
+                            dark: '#ffffff', // White QR code
+                            light: '#1a1a1a' // Dark background
+                        }
+                    });
+
+                    // Show download button and format select dropdown after QR code is generated
+                    downloadBtn.style.display = 'inline-block';
+                    formatSelect.style.display = 'inline-block'; // Show format select dropdown
+
+                    // Update the download link based on the selected format
+                    updateDownloadLink(format, qrData);
+                } catch (err) {
+                    alert("Oops! Couldn't generate QR code: " + err.message);
+                }
+            }
+        }
+
+        function updateDownloadLink(format, qrData) {
+            const downloadBtn = document.getElementById("download-btn");
+
+            // Generate the correct format for download
+            if (format === "png" || format === "jpg") {
+                const qrCodeCanvas = document.getElementById("qr-code");
+                qrCodeCanvas.toBlob(function (blob) {
+                    const url = URL.createObjectURL(blob);
+                    downloadBtn.href = url;
+                    downloadBtn.download = `qrcode.${format}`;
+                }, format === "jpg" ? "image/jpeg" : "image/png");
+            } else if (format === "svg") {
+                QRCode.toString(qrData, { type: 'svg' }, function (err, svgString) {
+                    if (err) {
+                        alert("Error generating SVG: " + err.message);
+                        return;
+                    }
+                    const blob = new Blob([svgString], { type: "image/svg+xml" });
+                    const url = URL.createObjectURL(blob);
+                    downloadBtn.href = url;
+                    downloadBtn.download = "qrcode.svg";
+                });
+            }
+        }
+
+        // Update QR code download when format changes
+        document.getElementById("file-format").addEventListener("change", function() {
+            const format = document.getElementById("file-format").value;
+            const qrData = document.getElementById("qr-data").value;
+
+            if (qrData.trim() !== "") {
+                updateDownloadLink(format, qrData);
+            }
+        });
+    </script>
+</body>
+</html>
